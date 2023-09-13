@@ -1,2 +1,5 @@
 .env
 .cache
+open_spotify_main.py
+t.cache
+__pycache__/gist_request.cpython-311.pyc
