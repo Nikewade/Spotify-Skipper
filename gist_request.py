@@ -36,7 +36,7 @@ def parse_content(content):
     lines = content.strip().split('\n')
     for line in lines:
         key, value = map(str.strip, line.split('='))
-        songs_dict[key] = int(value)
+        songs_dict[key.lower()] = int(value)
     return songs_dict
 
 def main():

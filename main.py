@@ -1,18 +1,11 @@
 import spotipy
 from dotenv import load_dotenv
 from spotipy.oauth2 import SpotifyOAuth, CacheFileHandler
+from flask import Flask
 import gist_request
 import os
 import time
 import threading
-
-songs_dict = {}
-
-def load_songs_from_file(file_path):
-    songs = {}
-    with open(file_path) as f:
-        songs = dict(s.lower().replace(" ", "").strip().split("=") for s in f)
-    return songs
 
 def initialize_spotify():
     load_dotenv()
@@ -32,14 +25,17 @@ def initialize_spotify():
     )
 
 def get_songs_loop():
+    global songs_dict
     while True:
-        print(gist_request.fetch_loop())
-        time.sleep(10)
+        print("Loading song list...")
+        songs_dict = gist_request.fetch_loop()
+        print(songs_dict)
+        time.sleep(20)
 
-def check_song_loop(songs, sp):
+def check_song_loop(sp):
     while True:
         current_track = sp.current_user_playing_track()
-
+        print(songs_dict)
         if current_track is None:
             print("No track loaded.")
             time.sleep(1)
@@ -64,19 +60,29 @@ def check_song_loop(songs, sp):
         print("Current Song:", current_song_name)
         print("Current Time (seconds):", current_time_seconds)
 
-        if current_song_name in songs:
+        if current_song_name in songs_dict:
             print("Song Name:", current_song_name, "is in the list!")
-            print("Timestamp to cancel on:", songs.get(current_song_name))
-            if current_time_seconds >= int(songs.get(current_song_name)):
+            print("Timestamp to cancel on:", songs_dict.get(current_song_name))
+            if current_time_seconds >= int(songs_dict.get(current_song_name)):
                 sp.next_track()
         
         time.sleep(1)
 
 def main():
-    print("Loading song list...")
     threading.Thread(target=get_songs_loop).start()
+    time.sleep(3)
+
     sp = initialize_spotify()
-    threading.Thread(target=check_song_loop(songs_dict, sp)).start()
+    threading.Thread(target=check_song_loop(sp)).start()
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return "Flask running"
 
 if __name__ == "__main__":
-    main()
+    main_thread = threading.Thread(target=main)
+    main_thread.start()
+
+    app.run(host="0.0.0.0",port=8080)
