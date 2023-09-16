@@ -1,2 +1,0 @@
-Nightmare = 45
-Drinking with Cupid = 30
